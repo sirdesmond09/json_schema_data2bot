@@ -1,7 +1,7 @@
 import json
 
 
-json_types = {'dict': 'object', 
+python_to_json_types = {'dict': 'object', 
               'list': 'array', 
               'tuple': 'array', 
               'str': 'string', 
@@ -9,59 +9,93 @@ json_types = {'dict': 'object',
               'bool': 'boolean', 
               'None': 'null'}
 
-def get_schema(json_data,tag="", desc=""):
+# def get_schema(json_data,tag="", desc=""):
     
-    """This function is used to get the high level schema of a given json data. 
+#     """This function is used to get the high level schema of a given json data. 
 
-    args:
+#     args:
     
-        json_data (dict): The json data.
+#         json_data (dict): The json data.
 
-        tag (str): The tag of the json data.
+#         tag (str): The tag of the json data.
 
-        desc (str): The description of the json data.
+#         desc (str): The description of the json data.
 
-    returns:
+#     returns:
 
-        The schema of the json data.
+#         The schema of the json data.
 
-    """
+#     """
 
-    schema = {}
+#     schema = {}
             
+#     if isinstance(json_data, dict):
+#         for key, value in json_data.items():
+            
+#             #Check if the value is an array and all data is a string, then the program  maps the data type as an ENUM 
+#             if (type(value).__name__ == "list" or type(value).__name__ == "tuple") and all(isinstance(i, str) for i in value):
+               
+#                 schema_data = (("type","enum"),
+#                                ("tag", tag),
+#                                ("description", desc),
+#                                ("required", False))
+                
+#             #Check if the value is an array and all data is a json/dict, then the program  maps the data type as an array 
+#             elif (type(value).__name__ == "list" or type(value).__name__ == "tuple") and all(isinstance(i, dict) for i in value):
+               
+#                 schema_data = (("type","array"),
+#                                ("tag", tag),
+#                                ("description", desc),
+#                                ("required", False))
+#             else:
+#                 schema_data = (("type",python_to_json_types.get(str((type(value).__name__)))),
+#                                ("tag", tag),
+#                                ("description", desc),
+#                                ("required", False))
+            
+#             schema[key] = dict(schema_data)
+            
+        
+#     #if the json is an array of objects, the program loops through and gets the schema
+#     elif isinstance(json_data, list) or isinstance(json_data,tuple):
+#         for data in json_data:
+#             return get_schema(data)
+        
+#     return schema
+
+def get_schema(json_data, tag="", desc=""):
+    """
+    Generate a high-level schema for the given JSON data.
+
+    Args:
+        json_data (dict): The JSON data to generate a schema for.
+        tag (str, optional): The tag of the JSON data.
+        desc (str, optional): The description of the JSON data.
+
+    Returns:
+        dict: A dictionary representing the high-level schema of the JSON data.
+    """
+    schema = {}
+
+    def get_type(value):
+        if (isinstance(value, list) or isinstance(value, tuple)) and all(isinstance(i, str) for i in value):
+            return 'enum'
+        elif (isinstance(value, list) or isinstance(value, tuple)) and all(isinstance(i, dict) for i in value):
+            return 'array'
+        else:
+            return json_types.get(str(type(value).__name__))
+
     if isinstance(json_data, dict):
         for key, value in json_data.items():
-            
-            #Check if the value is an array and all data is a string, then the program  maps the data type as an ENUM 
-            if (type(value).__name__ == "list" or type(value).__name__ == "tuple") and all(isinstance(i, str) for i in value):
-               
-                schema_data = (("type","enum"),
-                               ("tag", tag),
-                               ("description", desc),
-                               ("required", False))
-                
-            #Check if the value is an array and all data is a json/dict, then the program  maps the data type as an array 
-            elif (type(value).__name__ == "list" or type(value).__name__ == "tuple") and all(isinstance(i, dict) for i in value):
-               
-                schema_data = (("type","array"),
-                               ("tag", tag),
-                               ("description", desc),
-                               ("required", False))
-            else:
-                schema_data = (("type",json_types.get(str((type(value).__name__)))),
-                               ("tag", tag),
-                               ("description", desc),
-                               ("required", False))
-            
+            schema_data = (
+                ('type', get_type(value)),
+                ('tag', tag),
+                ('description', desc),
+                ('required', False)
+            )
             schema[key] = dict(schema_data)
-            
-        
-    #if the json is an array of objects, the program loops through and gets the schema
-    elif isinstance(json_data, list) or isinstance(json_data,tuple):
-        for data in json_data:
-            return get_schema(data)
-        
     return schema
+
 
 
     
@@ -107,7 +141,7 @@ def get_schema(json_data,tag="", desc=""):
 #         # If the object is not a dictionary or a list, it must be a primitive type
 #         # (e.g. string, number, boolean). We'll return the type of the object as
 #         # the schema.
-#         data =(("type",json_types.get(str((type(json_object).__name__)))),
+#         data =(("type",python_to_json_types.get(str((type(json_object).__name__)))),
 #                ("tag", tag),
 #             ("description", desc),
 #             ("required", False))
